@@ -1,7 +1,7 @@
 # Chemical Structures Visualizer Dependencies
 
-# Core chemistry library
-rdkit>=2023.3.0
+# Core chemistry library (use rdkit-pypi for better compatibility)
+rdkit-pypi>=2023.3.0
 
 # Data processing
 pandas>=2.0.0
@@ -9,5 +9,5 @@ pandas>=2.0.0
 # Excel file handling
 openpyxl>=3.1.0
 
-# Image processing (comes with RDKit, but listed for clarity)
+# Image processing
 Pillow>=10.0.0

@@ -1,55 +1,58 @@
 # Chemical Structures Visualizer
 
-将 SMILES 分子式转换为精美化学结构图像的 Python 工具
+Python tool for converting SMILES molecular formulas into beautiful chemical structure images
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![RDKit](https://img.shields.io/badge/RDKit-Latest-orange)
 
-## 项目简介
+## Overview
 
-本项目从 CSV 文件读取化合物的 SMILES（Simplified Molecular Input Line Entry System）分子式，利用 RDKit 化学信息学库自动生成对应的 2D 化学结构图像，并导出为带有结构图片的 Excel 文件。
+This project reads compound SMILES (Simplified Molecular Input Line Entry System) from CSV files and automatically generates 2D chemical structure images using the RDKit cheminformatics library, exporting them to an Excel file with embedded structure images.
 
-## 功能特点
+## Features
 
-- 读取 SMILES 格式的化学分子式
-- 自动生成高质量 2D 化学结构图像
-- 将图像批量插入 Excel（SMILES 右侧单元格）
-- 支持 156+ 化合物的批量处理
-- 输出可编辑的 Excel 文件，方便进一步分析
+- Read SMILES molecular formulas from CSV
+- Generate high-quality 2D chemical structure images
+- Batch insert images into Excel (right of SMILES column)
+- Support for 156+ compounds
+- Export to editable Excel for further analysis
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Requirements
 
 - Python 3.8+
 - Windows / macOS / Linux
 
-### 安装依赖
+### Install Dependencies
 
 ```bash
+# Recommended: use rdkit-pypi for better compatibility
+pip install rdkit-pypi pandas openpyxl Pillow
+# or use requirements.txt
 pip install -r requirements.txt
 ```
 
-### 运行程序
+### Run the Script
 
 ```bash
 python generate_chemical_images.py
 ```
 
-程序将自动：
-1. 读取 `chemical_structures_data.csv` 文件
-2. 为每个 SMILES 生成化学结构图像
-3. 创建包含结构图像的 Excel 文件
+The script will automatically:
+1. Read `chemical_structures_data.csv`
+2. Generate chemical structure images for each SMILES
+3. Create Excel file with embedded images
 
-### 输出文件
+### Output Files
 
-- `chemical_structures_with_images.xlsx` - 带图像的 Excel 文件
-- `chemical_images/` - 单独的结构图像（PNG 格式）
+- `chemical_structures_with_images.xlsx` - Excel file with images
+- `chemical_images/` - Individual structure images (PNG)
 
-## 数据格式
+## Data Format
 
-### 输入 CSV 格式
+### Input CSV
 
 ```csv
 Index,SMILES
@@ -57,75 +60,125 @@ Index,SMILES
 2,O=C(C=Cc1cc(Br)ccc1OC(F)F)Nc1ccc2c(c1)OCO2
 ```
 
-### 输出 Excel 格式
+### Output Excel
 
 | Index | SMILES | Structure |
 |-------|--------|-----------|
 | 1 | CN(Cc1ccccc1[N+](=O)[O-])... | ![](images/compound_1.png) |
 | 2 | O=C(C=Cc1cc(Br)ccc1OC(F)F)... | ![](images/compound_2.png) |
 
-## 示例图像
+## Sample Images
 
-以下是部分生成的化学结构图像：
+Here are some generated chemical structure images:
 
-| 化合物示例 | 描述 |
-|-----------|------|
-| ![](chemical_images/compound_1.png) | 含有硝基和苯环的化合物 |
-| ![](chemical_images/compound_2.png) | 含溴和氟的芳香化合物 |
-| ![](chemical_images/compound_3.png) | 含噻唑环的化合物 |
+| Compound | Description |
+|---------|-------------|
+| ![](chemical_images/compound_1.png) | Compound with nitro and benzene ring |
+| ![](chemical_images/compound_2.png) | Aromatic compound with bromine and fluorine |
+| ![](chemical_images/compound_3.png) | Compound with thiazole ring |
 
-## 技术栈
+## Tech Stack
 
-- **Python 3.11** - 编程语言
-- **RDKit** - 化学信息学库（分子结构处理）
-- **Pandas** - 数据处理
-- **OpenPyXL** - Excel 文件操作
-- **Pillow (PIL)** - 图像生成
+- **Python 3.11** - Programming language
+- **RDKit** - Cheminformatics library
+- **Pandas** - Data processing
+- **OpenPyXL** - Excel file handling
+- **Pillow (PIL)** - Image generation
 
-## 项目结构
+## Project Structure
 
 ```
 Third_work/
-├── chemical_structures_data.csv   # 原始 SMILES 数据
-├── generate_chemical_images.py     # 主程序脚本
-├── chemical_structures_with_images.xlsx  # 输出的 Excel 文件
-├── chemical_images/                 # 生成的图像文件夹
+├── chemical_structures_data.csv   # Original SMILES data
+├── generate_chemical_images.py     # Main script
+├── chemical_structures_with_images.xlsx  # Output Excel file
+├── chemical_images/                 # Generated images folder
 │   ├── compound_1.png
 │   ├── compound_2.png
 │   └── ...
-├── requirements.txt                  # Python 依赖
-└── README.md                         # 项目文档
+├── requirements.txt                  # Python dependencies
+├── .gitignore                        # Git ignore configuration
+├── .github/workflows/ci.yml         # CI/CD automation
+└── README.md                         # Project documentation
 ```
 
-## 扩展使用
+## CI/CD Automation
 
-### 自定义图像大小
+This project uses GitHub Actions for automated CI/CD:
 
-修改脚本中的 `size` 参数：
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install RDKit
+        run: |
+          pip install --upgrade pip
+          pip install rdkit-pypi
+      - name: Install other dependencies
+        run: pip install pandas openpyxl Pillow
+      - name: Generate chemical images
+        run: python generate_chemical_images.py
+      - name: Verify output
+        run: |
+          test -f chemical_structures_with_images.xlsx
+          test -d chemical_images
+          echo "Files generated successfully!"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chemical-structures
+          path: |
+            chemical_structures_with_images.xlsx
+            chemical_images/
+```
+
+On every `push` or `pull_request`:
+1. Checkout code
+2. Set up Python 3.11
+3. Install dependencies
+4. Run image generation script
+5. Verify output files
+6. Upload Excel and images as artifacts
+
+## Extended Usage
+
+### Custom Image Size
+
+Modify the `size` parameter in the script:
 
 ```python
-img = Draw.MolToImage(mol, size=(500, 300))  # 更大更清晰的图像
+img = Draw.MolToImage(mol, size=(500, 300))  # Larger, clearer images
 ```
 
-### 添加更多 SMILES 数据
+### Add More SMILES
 
-在 `chemical_structures_data.csv` 中添加新行，遵循以下格式：
+Add new rows to `chemical_structures_data.csv`:
 
 ```csv
 Index,SMILES
 157,CCOc1ccc(NC(=O)c2ccco2)cc1
 ```
 
-重新运行脚本即可生成新图像。
+Re-run the script to generate new images.
 
-## 许可证
+## License
 
-MIT License - 自由使用、修改和分发
+MIT License - Free to use, modify, and distribute
 
-## 贡献指南
+## Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Feel free to submit Issues and Pull Requests!
 
 ---
 
-⭐ 如果这个项目对你有帮助，请 star 支持一下！
+Star this project if you found it helpful!
