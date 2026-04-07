@@ -32,13 +32,15 @@ wheels/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
 
 # Generated files (can be regenerated)
 chemical_images/
 chemical_structures_with_images.xlsx
-*.png
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Temp
+*.tmp
+temp/
