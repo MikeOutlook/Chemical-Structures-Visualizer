@@ -29,12 +29,6 @@
 - 🖥️ **Desktop App** - User-friendly GUI (Windows, macOS, Linux)
 - ⚡ **CLI Support** - Command-line interface for automation
 
-## 📸 Screenshots
-
-| Desktop App | Structure Preview |
-|------------|------------------|
-| ![GUI](https://via.placeholder.com/400x300?text=Chemical+Visualizer+GUI) | ![Preview](chemical_images/compound_1.png) |
-
 ## 🚀 Quick Start
 
 ### Install
