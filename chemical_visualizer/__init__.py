@@ -1,7 +1,6 @@
-"""
-Chemical Structure Visualizer
-"""
-from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
+﻿"""Chemical Structure Visualizer package."""
 
-__version__ = '1.2.0'
-__all__ = ['CompoundProcessor', 'create_excel_with_images']
+from chemical_visualizer.core import CompoundProcessor, CompoundRecord, create_excel_with_images
+
+__version__ = "3.0.0"
+__all__ = ["CompoundProcessor", "CompoundRecord", "create_excel_with_images"]

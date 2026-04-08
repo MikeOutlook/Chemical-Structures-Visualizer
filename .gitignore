@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -32,6 +33,8 @@ wheels/
 
 # Jupyter
 .ipynb_checkpoints/
+.pytest_cache/
+.coverage
 
 # Generated files (can be regenerated)
 chemical_images/
@@ -44,3 +47,4 @@ Thumbs.db
 # Temp
 *.tmp
 temp/
+.tmp_build_env/

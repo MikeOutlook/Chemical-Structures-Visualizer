@@ -1,65 +1,29 @@
-import pandas as pd
-from rdkit import Chem
-from rdkit.Chem import Draw
-import openpyxl
-from openpyxl.drawing.image import Image
-import os
+﻿"""Convenience script for generating sample outputs from the bundled dataset."""
 
-# Read CSV file
-csv_path = 'chemical_structures_data.csv'
-df = pd.read_csv(csv_path)
+from pathlib import Path
 
-# Create output directory for images
-img_dir = 'chemical_images'
-os.makedirs(img_dir, exist_ok=True)
+from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
 
-# Create Excel workbook
-wb = openpyxl.Workbook()
-ws = wb.active
-ws.title = 'Chemical Structures'
 
-# Write headers
-ws['A1'] = 'Index'
-ws['B1'] = 'SMILES'
-ws['C1'] = 'Structure'
+def main():
+    csv_path = Path("chemical_structures_data.csv")
+    if not csv_path.exists():
+        raise SystemExit("Sample CSV not found: {0}".format(csv_path))
 
-# Generate images for each SMILES
-for idx, row in df.iterrows():
-    index = row['Index']
-    smiles = row['SMILES']
+    processor = CompoundProcessor()
+    count = processor.load_csv(csv_path)
 
-    # Generate molecule from SMILES
-    mol = Chem.MolFromSmiles(smiles)
+    image_dir = Path("chemical_images")
+    excel_path = Path("chemical_structures_with_images.xlsx")
 
-    if mol is not None:
-        # Generate image
-        img_filename = 'compound_' + str(index) + '.png'
-        img_path = os.path.join(img_dir, img_filename)
-        img = Draw.MolToImage(mol, size=(300, 200))
-        img.save(img_path)
+    print("Loaded {0} compounds from {1}".format(count, csv_path))
+    success, fail = processor.process_all(image_dir)
+    print("Processed: {0} successful, {1} failed".format(success, fail))
 
-        # Write data to Excel
-        row_num = idx + 2
-        ws.cell(row=row_num, column=1, value=index)
-        ws.cell(row=row_num, column=2, value=smiles)
+    create_excel_with_images(processor, excel_path)
+    print("Excel file saved to: {0}".format(excel_path))
+    print("Images saved to: {0}".format(image_dir))
 
-        # Add image to column C (right of SMILES)
-        img_obj = Image(img_path)
-        img_obj.width = 150
-        img_obj.height = 100
-        ws.add_image(img_obj, f'C{row_num}')
 
-        print(f"Processed compound {index}: {smiles[:30]}...")
-    else:
-        print(f"Failed to parse SMILES for index {index}: {smiles[:30]}...")
-
-# Adjust column widths
-ws.column_dimensions['A'].width = 8
-ws.column_dimensions['B'].width = 60
-ws.column_dimensions['C'].width = 20
-
-# Save Excel file
-output_path = 'chemical_structures_with_images.xlsx'
-wb.save(output_path)
-print(f"\nExcel file saved to: {output_path}")
-print(f"Images saved to: {img_dir}")
+if __name__ == "__main__":
+    main()

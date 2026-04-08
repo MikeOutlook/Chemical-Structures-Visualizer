@@ -1,4 +1,4 @@
-# Chemical Structures Visualizer 🧪
+# Chemical Structures Visualizer
 
 <p align="center">
   <a href="https://github.com/MikeOutlook/Chemical-Structures-Visualizer/releases">
@@ -11,86 +11,119 @@
     <img src="https://img.shields.io/github/stars/MikeOutlook/Chemical-Structures-Visualizer" alt="Stars">
   </a>
   <a href="https://www.python.org/">
-    <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python" alt="Python">
+    <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python" alt="Python 3.10+">
   </a>
   <a href="https://www.rdkit.org/">
-    <img src="https://img.shields.io/badge/RDKit-Latest-orange?logo=python" alt="RDKit">
+    <img src="https://img.shields.io/badge/RDKit-powered-orange?logo=python" alt="RDKit">
   </a>
 </p>
 
-> Turn SMILES molecular formulas into beautiful 2D structure images with ease!
+Generate 2D chemical structure images from SMILES strings.
 
-## ✨ Features
+This project provides:
 
-- 📥 **Easy Import** - Load compounds from CSV or paste SMILES directly
-- 🎨 **Beautiful Images** - Generate high-quality 2D chemical structure images
-- 📊 **Excel Export** - Create Excel files with embedded structure images
-- 🖼️ **PNG Export** - Save individual structure images
-- 🖥️ **Desktop App** - User-friendly GUI (Windows, macOS, Linux)
-- ⚡ **CLI Support** - Command-line interface for automation
+- a command-line workflow for batch processing CSV files
+- a desktop GUI for importing and previewing compounds
+- PNG image export and Excel workbook generation with embedded structure images
 
-## 🚀 Quick Start
+## Features
 
-### Install
+- Convert SMILES strings into 2D molecule images with RDKit
+- Batch-process CSV input from the command line
+- Export individual PNG files for each successfully parsed compound
+- Generate `.xlsx` files with molecule images embedded next to source data
+- Preview structures interactively in a CustomTkinter desktop application
+- Includes a sample dataset with 156 compounds
+
+## Requirements
+
+- Python 3.10 or newer
+- `pip`
+- A platform supported by the listed dependencies
+
+## Installation
+
+The recommended installation method is an editable local install so the `chemviz` command is available.
 
 ```bash
-# Clone the repository
 git clone https://github.com/MikeOutlook/Chemical-Structures-Visualizer.git
 cd Chemical-Structures-Visualizer
 
-# Install dependencies
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+```bash
+# Windows
+.venv\Scripts\activate
+
+# macOS / Linux
+source .venv/bin/activate
+```
+
+Install the package:
+
+```bash
+python -m pip install --upgrade pip
+pip install -e .
+```
+
+If you only want the raw dependencies without installing the package entry point, you can use:
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Run Desktop App
+## Quick Start
+
+### CLI
+
+The CLI is the most complete workflow for repeatable batch processing.
 
 ```bash
-python main.py
+chemviz chemical_structures_data.csv
 ```
 
-### Run CLI
+This command will:
+
+- read compounds from the CSV file
+- generate PNG files in `chemical_images/`
+- create `chemical_structures_with_images.xlsx`
+
+You can also customize the output paths and image size:
+
+```bash
+chemviz chemical_structures_data.csv -o results.xlsx -i output_images -s 400x300
+```
+
+If you prefer not to install the entry point, run the module directly:
 
 ```bash
 python -m chemical_visualizer.cli chemical_structures_data.csv
 ```
 
-## 📖 Usage
-
 ### Desktop App
 
-1. Click **Import CSV** to load your SMILES data
-2. Or click **Input SMILES** to paste molecular formulas
-3. Click on any compound in the list to preview its structure
-4. Export to **Excel** or **PNG**
-
-### Command Line
+Launch the GUI with:
 
 ```bash
-# Basic usage
-chemviz input.csv
-
-# Custom output
-chemviz input.csv -o output.xlsx -i images/
+python main.py
 ```
 
-## 📁 Project Structure
+Current GUI workflow:
 
-```
-Chemical-Structures-Visualizer/
-├── main.py                      # Desktop app entry point
-├── chemical_visualizer/       # Core Python package
-│   ├── core.py                 # Processing logic
-│   └── cli.py                 # Command-line interface
-├── gui/                       # GUI module
-│   └── app.py                 # CustomTkinter app
-├── chemical_structures_data.csv # Sample data (156 compounds)
-├── chemical_images/            # Generated images
-└── requirements.txt         # Dependencies
-```
+1. Import a CSV file or paste SMILES strings manually.
+2. Browse the loaded compounds in the list view.
+3. Click a compound to preview its 2D structure.
 
-## 📋 Data Format
+For automated runs and batch export, prefer the CLI.
 
-### Input CSV
+## Input Format
+
+CSV input must contain a `SMILES` column. An `Index` column is optional.
+
+Example:
 
 ```csv
 Index,SMILES
@@ -98,42 +131,88 @@ Index,SMILES
 2,O=C(C=Cc1cc(Br)ccc1OC(F)F)Nc1ccc2c(c1)OCO2
 ```
 
-### SMILES Examples
+Notes:
 
-| Compound | SMILES | Description |
-|----------|-------|------------|
-| Nitro compound | `CN(Cc1ccccc1[N+](=O)[O-])Cc1cc(=O)oc2cc(O)ccc12` | Benzene with nitro group |
-| Brominated | `O=C(C=Cc1cc(Br)ccc1OC(F)F)Nc1ccc2c(c1)OCO2` | Aromatic with Br and F |
+- `SMILES` is required.
+- `Index` is used for file naming and Excel output when present.
+- Invalid SMILES strings are reported during processing and skipped for image generation.
 
-## 🛠️ Technology Stack
+## Output
 
-- **Python 3.8+** - Programming language
-- **RDKit** - Cheminformatics library
-- **CustomTkinter** - Modern GUI framework
-- **Pandas** - Data processing
-- **OpenPyXL** - Excel handling
+By default, the CLI creates:
 
-## 🤝 Contributing
+- `chemical_images/` with one PNG per successfully parsed compound
+- `chemical_structures_with_images.xlsx` with the original data and embedded structure images
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Generated image files follow the naming pattern `compound_<index>.png`.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Project Structure
 
-## 📝 License
+```text
+Chemical-Structures-Visualizer/
+├── chemical_visualizer/
+│   ├── __init__.py
+│   ├── cli.py                  # Command-line entry point
+│   └── core.py                 # CSV loading, image generation, Excel export
+├── gui/
+│   ├── __init__.py
+│   └── app.py                  # CustomTkinter desktop GUI
+├── chemical_structures_data.csv
+├── generate_chemical_images.py # Standalone batch script
+├── main.py                     # GUI launcher
+├── pyproject.toml              # Package metadata and console script
+├── requirements.txt
+└── requirements-dev.txt
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Development
 
-## 🙏 Acknowledgments
+Install the development dependencies with:
 
-- [RDKit](https://www.rdkit.org/) - Open source cheminformatics
-- [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) - Beautiful Tkinter widgets
+```bash
+pip install -e .[dev]
+```
 
----
+Run the test suite with:
 
-<p align="center">
-  Made with ❤️ for chemistry enthusiasts
-</p>
+```bash
+pytest
+```
+
+Build a distributable package with:
+
+```bash
+python -m build
+```
+
+PyInstaller spec files are included in the repository for desktop packaging experiments.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development workflow.
+
+## Technology Stack
+
+- Python
+- RDKit
+- Pandas
+- Pillow
+- OpenPyXL
+- CustomTkinter
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make the change with a focused commit history.
+4. Open a pull request with a clear description of the problem and solution.
+
+If you are changing behavior, update the relevant documentation and examples in this README.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+- [RDKit](https://www.rdkit.org/) for cheminformatics tooling
+- [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) for the desktop UI framework

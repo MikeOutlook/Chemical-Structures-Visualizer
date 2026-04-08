@@ -1,90 +1,84 @@
-# -*- coding: utf-8 -*-
-"""
-GUI 主窗口模块
-"""
+﻿"""Desktop GUI for the Chemical Structures Visualizer."""
+
+from pathlib import Path
+import shutil
+import tempfile
+from tkinter import PanedWindow, filedialog, messagebox
+
 import customtkinter as ctk
-from tkinter import PanedWindow
-from tkinter import filedialog, messagebox
-import os
-import sys
 
 from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
 
 
 class ChemicalVisualizerGUI(ctk.CTk):
-    """化学结构可视化工具主窗口"""
+    """Simple desktop interface for loading, previewing, and exporting molecules."""
 
     def __init__(self):
         super().__init__()
 
-        # 配置窗口
         self.title("Chemical Structure Visualizer")
         self.geometry("900x700")
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
 
-        # 数据
         self.processor = CompoundProcessor()
         self.temp_image_dir = None
 
-        # 创建界面
         self.create_widgets()
-
-        # 设置关闭行为
         self.protocol("WM_DELETE_WINDOW", self.on_close)
-
-        # 创建临时目录
         self.create_temp_dir()
 
     def create_temp_dir(self):
-        """创建临时图像目录"""
-        import tempfile
-        self.temp_image_dir = tempfile.mkdtemp(prefix="chem_")
+        """Create a temporary directory used for generated GUI images."""
+
+        self.temp_image_dir = Path(tempfile.mkdtemp(prefix="chem_"))
+
+    def reset_temp_dir(self):
+        """Reset the temporary image directory to remove stale images."""
+
+        if self.temp_image_dir and self.temp_image_dir.exists():
+            shutil.rmtree(self.temp_image_dir)
+        self.create_temp_dir()
 
     def create_widgets(self):
-        """创建所有界面组件"""
-        # 顶部工具栏
+        """Create the application layout."""
+
         self.toolbar = ctk.CTkFrame(self, fg_color="transparent")
         self.toolbar.pack(fill="x", padx=10, pady=10)
 
-        # 导入按钮
         self.btn_import = ctk.CTkButton(
             self.toolbar,
             text="Import CSV",
             command=self.import_csv,
-            width=120
+            width=120,
         )
         self.btn_import.pack(side="left", padx=5)
 
-        # 输入SMILES按钮
         self.btn_input = ctk.CTkButton(
             self.toolbar,
             text="Input SMILES",
             command=self.input_smiles,
-            width=120
+            width=120,
         )
         self.btn_input.pack(side="left", padx=5)
 
-        # 清除按钮
         self.btn_clear = ctk.CTkButton(
             self.toolbar,
             text="Clear List",
             command=self.clear_list,
-            width=120
+            width=120,
         )
         self.btn_clear.pack(side="left", padx=5)
 
-        # 分隔
         ctk.CTkLabel(self.toolbar, text="").pack(side="left", expand=True, fill="x")
 
-        # 导出按钮
         self.btn_export_excel = ctk.CTkButton(
             self.toolbar,
             text="Export Excel",
             command=self.export_excel,
             fg_color="#217346",
             hover_color="#1e5e3a",
-            width=120
+            width=120,
         )
         self.btn_export_excel.pack(side="right", padx=5)
 
@@ -92,36 +86,29 @@ class ChemicalVisualizerGUI(ctk.CTk):
             self.toolbar,
             text="Export PNG",
             command=self.export_png,
-            width=120
+            width=120,
         )
         self.btn_export_png.pack(side="right", padx=5)
 
-        # 主内容区 - 使用PanedWindow分割
         self.main_paned = PanedWindow(self, orient="horizontal")
         self.main_paned.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # 左侧化合物列表
         self.create_list_panel()
-
-        # 右侧预览区
         self.create_preview_panel()
-
-        # 底部状态栏
         self.create_status_bar()
 
     def create_list_panel(self):
-        """创建化合物列表面板"""
+        """Create the compound list panel."""
+
         self.list_frame = ctk.CTkFrame(self.main_paned)
         self.main_paned.add(self.list_frame, weight=3)
 
-        # 标题
         ctk.CTkLabel(
             self.list_frame,
             text="Compound List",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14, weight="bold"),
         ).pack(pady=5)
 
-        # 表头
         header_frame = ctk.CTkFrame(self.list_frame, fg_color="transparent")
         header_frame.pack(fill="x", padx=10)
 
@@ -129,174 +116,184 @@ class ChemicalVisualizerGUI(ctk.CTk):
         ctk.CTkLabel(header_frame, text="SMILES", width=200).pack(side="left", expand=True)
         ctk.CTkLabel(header_frame, text="Status", width=60).pack(side="right", padx=5)
 
-        # 列表框（使用ScrollableFrame）
-        self.list_scrollable = ctk.CTkScrollableFrame(
-            self.list_frame,
-            label_text=""
-        )
+        self.list_scrollable = ctk.CTkScrollableFrame(self.list_frame, label_text="")
         self.list_scrollable.pack(fill="both", expand=True, padx=10, pady=5)
 
     def create_preview_panel(self):
-        """创建预览面板"""
+        """Create the structure preview panel."""
+
         self.preview_frame = ctk.CTkFrame(self.main_paned)
         self.main_paned.add(self.preview_frame, weight=2)
 
-        # 标题
         ctk.CTkLabel(
             self.preview_frame,
             text="Structure Preview",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14, weight="bold"),
         ).pack(pady=5)
 
-        # 预览标签（用于显示图像）
         self.preview_label = ctk.CTkLabel(
             self.preview_frame,
             text="Select a compound to view structure",
-            font=ctk.CTkFont(size=12)
+            font=ctk.CTkFont(size=12),
         )
         self.preview_label.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # 化合物信息
         self.info_label = ctk.CTkLabel(
             self.preview_frame,
             text="",
-            font=ctk.CTkFont(size=10)
+            font=ctk.CTkFont(size=10),
         )
         self.info_label.pack(pady=5)
 
     def create_status_bar(self):
-        """创建状态栏"""
+        """Create the bottom status bar."""
+
         self.status_frame = ctk.CTkFrame(self, height=30)
         self.status_frame.pack(fill="x", padx=10, pady=5)
 
-        self.status_label = ctk.CTkLabel(
-            self.status_frame,
-            text="Ready",
-            anchor="w"
-        )
+        self.status_label = ctk.CTkLabel(self.status_frame, text="Ready", anchor="w")
         self.status_label.pack(side="left", padx=10)
 
-        self.progress_label = ctk.CTkLabel(
-            self.status_frame,
-            text="",
-            anchor="e"
-        )
+        self.progress_label = ctk.CTkLabel(self.status_frame, text="", anchor="e")
         self.progress_label.pack(side="right", padx=10)
 
     def update_list(self):
-        """更新化合物列表显示"""
-        # 清空现有项
+        """Refresh the compound list UI."""
+
         for widget in self.list_scrollable.winfo_children():
             widget.destroy()
 
-        # 重新添加项
         for compound in self.processor.compounds:
             self.add_list_item(compound)
 
-        # 更新进度
         self.update_progress()
 
     def add_list_item(self, compound):
-        """添加列表项"""
+        """Render one compound row in the list."""
+
         item_frame = ctk.CTkFrame(self.list_scrollable, fg_color="transparent")
         item_frame.pack(fill="x", pady=2)
 
-        # 索引
-        ctk.CTkLabel(item_frame, text=str(compound['index']), width=40).pack(side="left")
+        smiles_preview = compound.smiles
+        if len(smiles_preview) > 30:
+            smiles_preview = smiles_preview[:30] + "..."
 
-        # SMILES（截断显示）
-        smiles = compound['smiles']
-        if len(smiles) > 30:
-            smiles = smiles[:30] + "..."
-        ctk.CTkLabel(item_frame, text=smiles, width=200).pack(side="left", expand=True, fill="x")
-
-        # 状态
-        status = compound['status']
-        if status == 'success':
+        if compound.status == "success":
             status_text = "OK"
             color = "#28a745"
-        elif status == 'error':
+        elif compound.status == "error":
             status_text = "Error"
             color = "#dc3545"
         else:
             status_text = "Pending"
             color = "#ffc107"
 
+        index_label = ctk.CTkLabel(item_frame, text=str(compound.index), width=40)
+        index_label.pack(side="left")
+
+        smiles_label = ctk.CTkLabel(item_frame, text=smiles_preview, width=200)
+        smiles_label.pack(side="left", expand=True, fill="x")
+
         status_label = ctk.CTkLabel(
             item_frame,
             text=status_text,
             text_color=color,
-            width=60
+            width=60,
         )
         status_label.pack(side="right", padx=5)
 
-        # 绑定点击事件
-        item_frame.bind("<Button-1>", lambda e, c=compound: self.on_select_compound(c))
+        for widget in (item_frame, index_label, smiles_label, status_label):
+            widget.bind("<Button-1>", lambda _event, c=compound: self.on_select_compound(c))
 
     def on_select_compound(self, compound):
-        """选择化合物时更新预览"""
-        smiles = compound['smiles']
-        status = compound['status']
+        """Update the preview panel for the selected compound."""
 
-        if status == 'success' and compound['image_path']:
-            # 显示图像
-            from PIL import Image, ImageTk
-            img = Image.open(compound['image_path'])
-            img = img.resize((350, 250))
-            photo = ImageTk.PhotoImage(img)
+        from PIL import Image, ImageTk
+
+        if compound.status == "success" and compound.image_path and Path(compound.image_path).exists():
+            preview_image = Image.open(compound.image_path)
+            preview_image.thumbnail((350, 250))
+            photo = ImageTk.PhotoImage(preview_image)
             self.preview_label.configure(image=photo, text="")
-            self.preview_label.image = photo  # 保持引用
-        elif status == 'error':
-            self.preview_label.configure(image=None, text="Error: " + compound.get('error', 'Invalid SMILES'))
+            self.preview_label.image = photo
+        elif compound.status == "error":
+            self.preview_label.configure(image=None, text="Error: {0}".format(compound.error or "Invalid SMILES"))
+            self.preview_label.image = None
         else:
-            # 实时生成预览
-            img = self.processor.generate_preview_image(smiles, size=(350, 250))
-            if img:
-                from PIL import Image, ImageTk
-                photo = ImageTk.PhotoImage(img)
+            preview_image = self.processor.generate_preview_image(compound.smiles, size=(350, 250))
+            if preview_image is None:
+                self.preview_label.configure(image=None, text="Invalid SMILES")
+                self.preview_label.image = None
+            else:
+                photo = ImageTk.PhotoImage(preview_image)
                 self.preview_label.configure(image=photo, text="")
                 self.preview_label.image = photo
-            else:
-                self.preview_label.configure(image=None, text="Invalid SMILES")
 
-        # 更新信息
-        self.info_label.configure(text="#{}: {}...".format(compound['index'], compound['smiles'][:50]))
+        self.info_label.configure(text="#{0}: {1}".format(compound.index, compound.smiles[:80]))
+
+    def update_processing_progress(self, current, total):
+        """Display progress while pending compounds are rendered."""
+
+        self.progress_label.configure(text="Processing: {0}/{1}".format(current, total))
+        self.update_idletasks()
 
     def update_progress(self):
-        """更新进度显示"""
+        """Display the number of successfully processed compounds."""
+
         total = len(self.processor.compounds)
         if total == 0:
             self.progress_label.configure(text="")
             return
 
-        success = sum(1 for c in self.processor.compounds if c['status'] == 'success')
-        self.progress_label.configure(text="Processed: {}/{}".format(success, total))
+        success = sum(1 for compound in self.processor.compounds if compound.status == "success")
+        self.progress_label.configure(text="Processed: {0}/{1}".format(success, total))
 
     def set_status(self, text):
-        """设置状态栏文本"""
+        """Set the status bar text."""
+
         self.status_label.configure(text=text)
-        self.update()
+        self.update_idletasks()
+
+    def process_pending_compounds(self):
+        """Render all compounds that have not been processed yet."""
+
+        pending_count = sum(1 for compound in self.processor.compounds if compound.status == "pending")
+        if pending_count == 0:
+            self.update_list()
+            return 0, 0
+
+        self.set_status("Processing {0} compounds...".format(pending_count))
+        success, fail = self.processor.process_all(
+            self.temp_image_dir,
+            progress_callback=self.update_processing_progress,
+            only_pending=True,
+        )
+        self.update_list()
+        self.set_status("Processed {0} compounds, {1} failed".format(success, fail))
+        return success, fail
 
     def import_csv(self):
-        """导入CSV文件"""
+        """Import compounds from a CSV file and process them."""
+
         filepath = filedialog.askopenfilename(
             title="Select CSV File",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
         )
-
         if not filepath:
             return
 
         try:
+            self.reset_temp_dir()
             count = self.processor.load_csv(filepath)
-            self.set_status("Imported {} compounds".format(count))
             self.update_list()
-        except Exception as e:
-            messagebox.showerror("Error", "Import failed: " + str(e))
+            self.process_pending_compounds()
+            self.set_status("Imported {0} compounds from {1}".format(count, Path(filepath).name))
+        except Exception as exc:
+            messagebox.showerror("Error", "Import failed: {0}".format(exc))
 
     def input_smiles(self):
-        """输入SMILES对话框"""
-        # 创建对话框
+        """Open a dialog for entering SMILES strings manually."""
+
         dialog = ctk.CTkToplevel(self)
         dialog.title("Input SMILES")
         dialog.geometry("500x300")
@@ -317,37 +314,42 @@ class ChemicalVisualizerGUI(ctk.CTk):
                 messagebox.showwarning("Warning", "Please enter SMILES")
                 return
 
-            lines = content.split('\n')
             added = 0
-            for line in lines:
-                line = line.strip()
-                if line:
-                    if self.processor.add_smiles(line):
-                        added += 1
+            skipped = 0
+            for line in content.splitlines():
+                if self.processor.add_smiles(line):
+                    added += 1
+                elif line.strip():
+                    skipped += 1
 
             dialog.destroy()
-            self.set_status("Added {} compounds".format(added))
             self.update_list()
+            self.process_pending_compounds()
+            self.set_status("Added {0} compounds, skipped {1} invalid entries".format(added, skipped))
 
         ctk.CTkButton(btn_frame, text="Add", command=add_compounds).pack(side="left", padx=5)
         ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy).pack(side="left", padx=5)
 
     def clear_list(self):
-        """清除列表"""
+        """Clear all loaded compounds and reset the preview."""
+
         self.processor.clear()
+        self.reset_temp_dir()
         self.update_list()
         self.preview_label.configure(image=None, text="Select a compound to view structure")
+        self.preview_label.image = None
         self.info_label.configure(text="")
         self.set_status("List cleared")
 
     def export_excel(self):
-        """导出Excel"""
-        if len(self.processor.compounds) == 0:
+        """Export the current compounds to an Excel workbook."""
+
+        if not self.processor.compounds:
             messagebox.showwarning("Warning", "No compounds to export")
             return
 
-        # 检查是否有成功处理的
-        success = [c for c in self.processor.compounds if c['status'] == 'success']
+        self.process_pending_compounds()
+        success = [compound for compound in self.processor.compounds if compound.status == "success"]
         if not success:
             messagebox.showwarning("Warning", "No successfully processed compounds")
             return
@@ -356,59 +358,60 @@ class ChemicalVisualizerGUI(ctk.CTk):
             title="Save Excel File",
             defaultextension=".xlsx",
             filetypes=[("Excel files", "*.xlsx")],
-            initialfile="chemical_structures_with_images.xlsx"
+            initialfile="chemical_structures_with_images.xlsx",
         )
-
         if not filepath:
             return
 
         try:
-            create_excel_with_images(self.processor, filepath, self.temp_image_dir)
-            self.set_status("Exported Excel: " + filepath)
-            messagebox.showinfo("Success", "Excel file saved to:\n" + filepath)
-        except Exception as e:
-            messagebox.showerror("Error", "Export failed: " + str(e))
+            create_excel_with_images(self.processor, filepath)
+            self.set_status("Exported Excel: {0}".format(filepath))
+            messagebox.showinfo("Success", "Excel file saved to:\n{0}".format(filepath))
+        except Exception as exc:
+            messagebox.showerror("Error", "Export failed: {0}".format(exc))
 
     def export_png(self):
-        """导出PNG图像"""
-        if len(self.processor.compounds) == 0:
+        """Export generated PNG files for successful compounds."""
+
+        if not self.processor.compounds:
             messagebox.showwarning("Warning", "No compounds to export")
             return
 
-        success = [c for c in self.processor.compounds if c['status'] == 'success']
+        self.process_pending_compounds()
+        success = [compound for compound in self.processor.compounds if compound.status == "success"]
         if not success:
             messagebox.showwarning("Warning", "No successfully processed compounds")
             return
 
         dirpath = filedialog.askdirectory(title="Select Output Directory")
-
         if not dirpath:
             return
 
         try:
-            import shutil
+            destination = Path(dirpath)
             for compound in success:
-                if compound['image_path']:
-                    shutil.copy2(compound['image_path'], dirpath)
+                if compound.image_path:
+                    shutil.copy2(compound.image_path, destination / Path(compound.image_path).name)
 
-            self.set_status("Exported {} PNGs to: {}".format(len(success), dirpath))
-            messagebox.showinfo("Success", "PNG files saved to:\n" + dirpath)
-        except Exception as e:
-            messagebox.showerror("Error", "Export failed: " + str(e))
+            self.set_status("Exported {0} PNGs to: {1}".format(len(success), destination))
+            messagebox.showinfo("Success", "PNG files saved to:\n{0}".format(destination))
+        except Exception as exc:
+            messagebox.showerror("Error", "Export failed: {0}".format(exc))
 
     def on_close(self):
-        """关闭时的清理"""
-        import shutil
-        if self.temp_image_dir and os.path.exists(self.temp_image_dir):
+        """Clean up temporary files when the application closes."""
+
+        if self.temp_image_dir and self.temp_image_dir.exists():
             shutil.rmtree(self.temp_image_dir)
         self.destroy()
 
 
 def main():
-    """主入口"""
+    """Launch the desktop application."""
+
     app = ChemicalVisualizerGUI()
     app.mainloop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

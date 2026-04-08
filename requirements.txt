@@ -1,16 +1,10 @@
-# Chemical Structures Visualizer Dependencies
+# Chemical Structures Visualizer runtime dependencies
+# Pinned versions are chosen to create a reproducible environment that is
+# installable from the currently accessible package index.
 
-# Core chemistry library (use rdkit-pypi for better compatibility)
-rdkit-pypi>=2023.3.0
-
-# Data processing
-pandas>=2.0.0
-
-# Excel file handling
-openpyxl>=3.1.0
-
-# Image processing
-Pillow>=10.0.0
-
-# GUI framework
-customtkinter>=5.2.0
+rdkit-pypi==2022.9.5
+numpy==1.26.4
+pandas==2.3.3
+openpyxl==3.1.5
+Pillow==12.2.0
+customtkinter==5.2.2
