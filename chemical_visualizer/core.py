@@ -11,6 +11,7 @@ from rdkit import Chem
 from rdkit.Chem import Draw
 
 
+# 这个模块集中处理数据读取、结构图生成和 Excel 导出。
 ProgressCallback = Callable[[int, int], None]
 
 
@@ -18,6 +19,7 @@ ProgressCallback = Callable[[int, int], None]
 class CompoundRecord:
     """Represents one compound entry loaded from CSV or manual input."""
 
+    # `status` / `image_path` / `error` 会随着处理流程不断更新。
     index: object
     smiles: str
     status: str = "pending"
@@ -29,11 +31,13 @@ class CompoundProcessor:
     """Loads compounds, renders 2D structure images, and tracks results."""
 
     def __init__(self, image_size=(300, 200)):
+        # 在初始化时统一校验尺寸，避免后续每次生成图片都重复检查。
         self.image_size = self._normalize_image_size(image_size)
         self.compounds = []  # type: List[CompoundRecord]
 
     @staticmethod
     def _normalize_image_size(image_size):
+        # 所有图片尺寸都走同一套入口，保证 CLI、GUI 和测试行为一致。
         width, height = image_size
         if width <= 0 or height <= 0:
             raise ValueError("Image size must use positive integers")
@@ -41,6 +45,7 @@ class CompoundProcessor:
 
     @staticmethod
     def _build_image_filename(index):
+        # 文件名只保留安全字符，避免索引里带空格或符号时写文件失败。
         safe_index = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(index)).strip("_")
         return "compound_{0}.png".format(safe_index or "item")
 
@@ -51,6 +56,7 @@ class CompoundProcessor:
         if "SMILES" not in dataframe.columns:
             raise ValueError("CSV must contain a 'SMILES' column")
 
+        # `Index` 列是可选的；没有时就按行号从 1 开始自动编号。
         has_index_column = "Index" in dataframe.columns
         self.compounds = []
 
@@ -68,6 +74,7 @@ class CompoundProcessor:
         if not normalized_smiles:
             return False
 
+        # 先尝试解析，只有合法 SMILES 才进入列表。
         molecule = Chem.MolFromSmiles(normalized_smiles)
         if molecule is None:
             return False
@@ -81,18 +88,21 @@ class CompoundProcessor:
 
         molecule = Chem.MolFromSmiles(compound.smiles)
         if molecule is None:
+            # 错误信息直接写回记录，方便 GUI 列表和导出逻辑读取。
             compound.status = "error"
             compound.error = "Invalid SMILES"
             compound.image_path = None
             return False
 
         output_dir_path = Path(output_dir)
+        # 输出目录不存在时自动创建，调用方无需提前准备。
         output_dir_path.mkdir(parents=True, exist_ok=True)
 
         image = Draw.MolToImage(molecule, size=self.image_size)
         image_path = output_dir_path / self._build_image_filename(compound.index)
         image.save(image_path)
 
+        # 成功后记录图片路径，后续预览和 Excel 嵌图都会复用。
         compound.status = "success"
         compound.error = None
         compound.image_path = str(image_path)
@@ -103,6 +113,7 @@ class CompoundProcessor:
 
         targets = self.compounds
         if only_pending:
+            # 重复导出时只补跑待处理项，避免重复渲染相同结构图。
             targets = [compound for compound in self.compounds if compound.status == "pending"]
 
         success_count = 0
@@ -116,6 +127,7 @@ class CompoundProcessor:
                 fail_count += 1
 
             if progress_callback is not None:
+                # 进度展示由上层决定，这里只负责通知当前进度。
                 progress_callback(current, total)
 
         return success_count, fail_count
@@ -146,6 +158,7 @@ class CompoundProcessor:
 def create_excel_with_images(processor, output_path, image_dir=None):
     """Create an Excel workbook that embeds generated structure images."""
 
+    # 保留旧参数名以兼容已有调用方，当前实现本身不再使用它。
     del image_dir  # Retained for backward compatibility with existing callers.
 
     workbook = openpyxl.Workbook()
@@ -163,6 +176,7 @@ def create_excel_with_images(processor, output_path, image_dir=None):
         worksheet.cell(row=row_number, column=2, value=compound.smiles)
 
         if compound.status == "success" and compound.image_path and Path(compound.image_path).exists():
+            # 只有文件真实存在时才插图，避免生成损坏的工作簿。
             image = OpenPyXLImage(compound.image_path)
             image.width = 150
             image.height = 100
@@ -174,5 +188,6 @@ def create_excel_with_images(processor, output_path, image_dir=None):
     worksheet.column_dimensions["C"].width = 24
 
     output_path = Path(output_path)
+    # 允许直接导出到尚不存在的目录。
     output_path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(output_path)

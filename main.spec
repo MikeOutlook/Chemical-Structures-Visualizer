@@ -5,6 +5,7 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules
 from PyInstaller.building.build_main import Analysis, EXE, PYZ
 
 # 收集 RDKit 相关模块
+# 这里集中声明 PyInstaller 在静态分析时可能漏掉的运行时依赖。
 hiddenimports = [
     'rdkit',
     'rdkit.Chem',
@@ -25,11 +26,13 @@ hiddenimports = [
     'tkinter.messagebox',
 ]
 
+# 打包时把项目源码目录一起带上，确保运行时能找到本地模块。
 datas = [
     ('chemical_visualizer', 'chemical_visualizer'),
     ('gui', 'gui'),
 ]
 
+# Analysis 负责扫描入口脚本及其依赖关系。
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -48,6 +51,7 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
+# EXE 定义最终生成的可执行程序形态。
 exe = EXE(
     pyz,
     a.scripts,

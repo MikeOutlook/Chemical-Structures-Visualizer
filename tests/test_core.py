@@ -5,12 +5,15 @@ import pytest
 
 from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
 
+# 这里主要覆盖核心数据处理流程的关键行为。
 
 def write_csv(path, content):
+    # 测试里统一用 UTF-8 写 CSV，避免平台差异影响断言。
     path.write_text(content, encoding="utf-8")
 
 
 def test_load_csv_requires_smiles_column(tmp_path):
+    # 缺少必填列时应抛出友好的错误信息。
     csv_path = tmp_path / "invalid.csv"
     write_csv(csv_path, "Index,Name\n1,Example\n")
 
@@ -20,6 +23,7 @@ def test_load_csv_requires_smiles_column(tmp_path):
 
 
 def test_add_smiles_rejects_invalid_input():
+    # 既要接受合法输入，也要拒绝空值和非法 SMILES。
     processor = CompoundProcessor()
 
     assert processor.add_smiles("CCO") is True
@@ -30,6 +34,7 @@ def test_add_smiles_rejects_invalid_input():
 
 
 def test_process_all_creates_images_and_excel(tmp_path):
+    # 这个用例串起了“读 CSV -> 生成图片 -> 导出 Excel”的主流程。
     csv_path = tmp_path / "compounds.csv"
     write_csv(
         csv_path,
@@ -40,6 +45,7 @@ def test_process_all_creates_images_and_excel(tmp_path):
     count = processor.load_csv(csv_path)
     assert count == 2
 
+    # 额外记录进度回调，确保批处理过程中有正确的进度通知。
     events = []
     image_dir = tmp_path / "images"
     success, fail = processor.process_all(
@@ -72,6 +78,7 @@ def test_process_all_creates_images_and_excel(tmp_path):
 
 
 def test_process_all_only_pending_skips_processed_rows(tmp_path):
+    # 第二次执行仅处理 pending 时，不应该重复覆盖已成功项。
     processor = CompoundProcessor()
     processor.add_smiles("CCO", index=1)
     processor.add_smiles("CCN", index=2)

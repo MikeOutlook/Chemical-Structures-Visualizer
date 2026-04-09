@@ -11,6 +11,7 @@ from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
 def parse_image_size(value):
     """Parse a WxH image size string into an integer tuple."""
 
+    # 允许用户通过命令行传入类似 `300x200` 的尺寸字符串。
     try:
         width_text, height_text = value.lower().split("x", 1)
         width = int(width_text)
@@ -35,6 +36,7 @@ def build_parser():
     parser.add_argument(
         "input",
         nargs="?",
+        # 不传时默认回退到当前目录下的示例 CSV。
         help="Input CSV file. Defaults to chemical_structures_data.csv in the current directory.",
     )
     parser.add_argument(
@@ -59,6 +61,7 @@ def build_parser():
     parser.add_argument(
         "--version",
         action="version",
+        # 复用包内版本号，避免 CLI 和包元数据不一致。
         version="%(prog)s {0}".format(__version__),
     )
     return parser
@@ -79,6 +82,7 @@ def main(argv=None):
     try:
         count = processor.load_csv(input_path)
     except Exception as exc:
+        # 读取错误统一输出到标准错误，便于脚本环境捕获。
         print("Error: {0}".format(exc), file=sys.stderr)
         return 1
 
@@ -92,6 +96,7 @@ def main(argv=None):
     print("Processed: {0} successful, {1} failed".format(success, fail))
 
     output_path = Path(args.output)
+    # 允许用户直接指定一个尚未创建的输出目录。
     output_path.parent.mkdir(parents=True, exist_ok=True)
     create_excel_with_images(processor, output_path)
 

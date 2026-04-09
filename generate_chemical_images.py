@@ -6,6 +6,7 @@ from chemical_visualizer.core import CompoundProcessor, create_excel_with_images
 
 
 def main():
+    # 默认读取仓库自带的示例 CSV，方便快速验证项目是否运行正常。
     csv_path = Path("chemical_structures_data.csv")
     if not csv_path.exists():
         raise SystemExit("Sample CSV not found: {0}".format(csv_path))
@@ -13,6 +14,7 @@ def main():
     processor = CompoundProcessor()
     count = processor.load_csv(csv_path)
 
+    # 输出路径沿用项目文档中的默认命名。
     image_dir = Path("chemical_images")
     excel_path = Path("chemical_structures_with_images.xlsx")
 

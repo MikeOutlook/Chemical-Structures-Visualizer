@@ -16,6 +16,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # 窗口外观和主题在初始化阶段一次性配置。
         self.title("Chemical Structure Visualizer")
         self.geometry("900x700")
         ctk.set_appearance_mode("system")
@@ -31,6 +32,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
     def create_temp_dir(self):
         """Create a temporary directory used for generated GUI images."""
 
+        # GUI 预览图统一写入临时目录，避免污染用户选择的输出目录。
         self.temp_image_dir = Path(tempfile.mkdtemp(prefix="chem_"))
 
     def reset_temp_dir(self):
@@ -43,6 +45,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
     def create_widgets(self):
         """Create the application layout."""
 
+        # 顶部工具栏放置导入、手工录入与导出按钮。
         self.toolbar = ctk.CTkFrame(self, fg_color="transparent")
         self.toolbar.pack(fill="x", padx=10, pady=10)
 
@@ -93,6 +96,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
         self.main_paned = PanedWindow(self, orient="horizontal")
         self.main_paned.pack(fill="both", expand=True, padx=10, pady=5)
 
+        # 主区域分为左侧列表、右侧预览和底部状态栏。
         self.create_list_panel()
         self.create_preview_panel()
         self.create_status_bar()
@@ -160,6 +164,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
     def update_list(self):
         """Refresh the compound list UI."""
 
+        # 每次刷新时先清空旧控件，再根据当前数据重建列表。
         for widget in self.list_scrollable.winfo_children():
             widget.destroy()
 
@@ -176,6 +181,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
 
         smiles_preview = compound.smiles
         if len(smiles_preview) > 30:
+            # 列表中只展示简短摘要，避免长 SMILES 挤压布局。
             smiles_preview = smiles_preview[:30] + "..."
 
         if compound.status == "success":
@@ -202,6 +208,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
         )
         status_label.pack(side="right", padx=5)
 
+        # 让整行任意位置都能选中该化合物。
         for widget in (item_frame, index_label, smiles_label, status_label):
             widget.bind("<Button-1>", lambda _event, c=compound: self.on_select_compound(c))
 
@@ -211,6 +218,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
         from PIL import Image, ImageTk
 
         if compound.status == "success" and compound.image_path and Path(compound.image_path).exists():
+            # 已经生成过的图片直接加载本地文件，响应更快。
             preview_image = Image.open(compound.image_path)
             preview_image.thumbnail((350, 250))
             photo = ImageTk.PhotoImage(preview_image)
@@ -220,6 +228,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
             self.preview_label.configure(image=None, text="Error: {0}".format(compound.error or "Invalid SMILES"))
             self.preview_label.image = None
         else:
+            # 待处理项按需即时预览，用户不必先手动导出。
             preview_image = self.processor.generate_preview_image(compound.smiles, size=(350, 250))
             if preview_image is None:
                 self.preview_label.configure(image=None, text="Invalid SMILES")
@@ -262,6 +271,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
             self.update_list()
             return 0, 0
 
+        # 只处理待办项，避免导出前重复生成已经成功的结构图。
         self.set_status("Processing {0} compounds...".format(pending_count))
         success, fail = self.processor.process_all(
             self.temp_image_dir,
@@ -283,6 +293,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
             return
 
         try:
+            # 新导入的数据需要对应一套全新的临时图片目录。
             self.reset_temp_dir()
             count = self.processor.load_csv(filepath)
             self.update_list()
@@ -309,6 +320,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
         btn_frame.pack(pady=10)
 
         def add_compounds():
+            # 逐行读取，合法的加入列表，非法的统计后统一提示。
             content = textbox.get("1.0", "end").strip()
             if not content:
                 messagebox.showwarning("Warning", "Please enter SMILES")
@@ -348,6 +360,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
             messagebox.showwarning("Warning", "No compounds to export")
             return
 
+        # 导出前确保所有待处理记录都已经生成图片。
         self.process_pending_compounds()
         success = [compound for compound in self.processor.compounds if compound.status == "success"]
         if not success:
@@ -391,6 +404,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
             destination = Path(dirpath)
             for compound in success:
                 if compound.image_path:
+                    # 保留原文件名复制，方便按索引回溯来源。
                     shutil.copy2(compound.image_path, destination / Path(compound.image_path).name)
 
             self.set_status("Exported {0} PNGs to: {1}".format(len(success), destination))
@@ -401,6 +415,7 @@ class ChemicalVisualizerGUI(ctk.CTk):
     def on_close(self):
         """Clean up temporary files when the application closes."""
 
+        # 退出时清理临时目录，避免系统里留下无用中间文件。
         if self.temp_image_dir and self.temp_image_dir.exists():
             shutil.rmtree(self.temp_image_dir)
         self.destroy()

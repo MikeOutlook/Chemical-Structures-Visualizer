@@ -1,7 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+# 旧模板里保留该变量，便于统一传给 Analysis / PYZ。
 block_cipher = None
 
+# Analysis 负责解析入口脚本并收集打包所需资源。
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -31,6 +33,7 @@ a = Analysis(
 
 pyz = PYZ(a.pure, block_cipher)
 
+# EXE 负责描述最终 GUI 可执行文件的打包参数。
 exe = EXE(
     pyz,
     a.scripts,
